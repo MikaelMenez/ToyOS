@@ -1,13 +1,9 @@
 
-
----
-
-```markdown
 # ToyOS
 
 Um projeto de sistema operacional minimalista (bare-metal) baseado no livro *The Little OS Book*, desenvolvido em **Zig (0.16.0)** e **Assembly NASM** para a arquitetura x86 (32 bits), utilizando o bootloader **GRUB Legacy** via Multiboot.
 
----
+
 
 ## 📋 Pré-requisitos (Ubuntu)
 
