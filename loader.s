@@ -5,7 +5,8 @@ MAGIC_NUMBER equ 0x1BADB002
 FLAGS        equ 0x00000001
 CHECKSUM     equ -(MAGIC_NUMBER + FLAGS)
 
-section .text
+; --- CORREÇÃO AQUI: Garante que o header vai para a seção que o link.ld espera ---
+section .multiboot
 align 4
     dd MAGIC_NUMBER
     dd FLAGS
