@@ -72,5 +72,15 @@ pub fn build(b: *std.Build) void {
 
     mkisofs_cmd.step.dependOn(&cp_cmd.step);
     iso_step.dependOn(&mkisofs_cmd.step);
-}
 
+    const run_cmd = b.addSystemCommand(&.{
+        "qemu-system-i386",
+        "-cdrom",
+        "os.iso",
+        "-serial",
+        "file:com1.out", // ou "stdio" se preferir no terminal
+    });
+
+    const run_step = b.step("run", "Roda o ToyOS no QEMU com log serial");
+    run_step.dependOn(&run_cmd.step);
+}

@@ -47,7 +47,7 @@ zig build iso
 Para rodar a ISO gerada no emulador QEMU:
 
 ```bash
-qemu-system-i386 -cdrom os.iso
+zig build run
 
 ```
 

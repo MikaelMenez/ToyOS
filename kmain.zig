@@ -1,4 +1,4 @@
-const fb = @import("framebuffer.zig");
+const fb = @import("utils/framebuffer.zig");
 
 export fn kmain() callconv(.c) void {
     // Código de teste rápido da seção 4.2.2: escreve o caractere 'A' (0x41)
