@@ -78,9 +78,10 @@ pub fn build(b: *std.Build) void {
         "-cdrom",
         "os.iso",
         "-serial",
-        "file:com1.out", // ou "stdio" se preferir no terminal
+        "stdio", // ou "stdio" se preferir no terminal
     });
 
     const run_step = b.step("run", "Roda o ToyOS no QEMU com log serial");
     run_step.dependOn(&run_cmd.step);
 }
+

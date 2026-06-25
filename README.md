@@ -14,16 +14,14 @@ sudo apt-get update && sudo apt-get install build-essential nasm genisoimage qem
 
 ```
 
-### Instalação do Zig 0.16.0
+### Instalação do Zig 0.17.0
 
-Como a versão 0.16.0 é a versão de desenvolvimento atual (*master/nightly*), você deve baixá-la diretamente dos servidores oficiais do Zig. Execute a sequência abaixo para baixar, extrair e adicionar o compilador ao seu `PATH`:
+Como a versão 0.17.0 é a versão de desenvolvimento atual (*master/nightly*), você deve baixá-la diretamente dos servidores oficiais do Zig. Execute a sequência abaixo para baixar, extrair e adicionar o compilador ao seu `PATH`:
 
+Primeiro baixe o arquivo tar.xz no site oficial do zig
 ```bash
-# Baixa o binário oficial do Zig 0.16.0 para Linux x86_64
-wget [https://ziglang.org/builds/zig-linux-x86_64-0.16.0-dev.643+7a1b3c4d5.tar.xz](https://ziglang.org/builds/zig-linux-x86_64-0.16.0-dev.643+7a1b3c4d5.tar.xz)
-
 # Extrai o arquivo
-tar -xf zig-linux-x86_64-0.16.0-dev.643+7a1b3c4d5.tar.xz
+tar -xf zig-linux-x86_64-*.tar.xz
 
 # Move para o diretório local de binários
 sudo mv zig-linux-x86_64-0.16.0-dev.643+7a1b3c4d5 /opt/zig

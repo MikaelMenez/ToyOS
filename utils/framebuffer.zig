@@ -3,6 +3,10 @@ pub const Frame = packed struct(u16) {
     fg: u4,
     bg: u4,
 };
+comptime {
+    @export(&write, .{ .name = "fb_write", .linkage = .strong });
+}
+
 const FG = 13;
 const BG = 0;
 var current_row: usize = 0;
@@ -52,7 +56,7 @@ fn scroll() void {
     }
     current_row = MAX_ROWS - 1;
 }
-pub export fn write(buffer: [*]const u8, len: usize) callconv(.c) c_int {
+pub fn write(buffer: [*]const u8, len: usize) callconv(.c) c_int {
     for (buffer[0..len]) |char| {
         if (char == '\n') {
             current_row += 1;
