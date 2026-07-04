@@ -82,3 +82,12 @@ A evolução do repositório segue a ordem dos conceitos teóricos apresentados 
 * Criação do driver inicial do Framebuffer apontando para o endereço de memória física `0x000B8000`.
 * Manipulação direta de ponteiros para escrever caracteres e definir cores de fundo e texto na tela preta do terminal.
 
+
+
+### 📑 Capítulo 5: Segmentação (Segmentation)
+
+* **Foco do Livro**: Compreender como o processador x86 organiza o acesso à memória através de segmentos, e configurar a Global Descriptor Table (GDT) para habilitar a segmentação em modo protegido.
+* **Implementação**:
+  * Criação do arquivo `utils/gdt.zig` com as structs do descritor de segmento e do ponteiro usado pela instrução `lgdt`, e a função `gdtInstall()` que monta os três descritores: nulo, código (Execute/Read) e dados (Read/Write), cobrindo 0x00000000–0xFFFFFFFF em nível de privilégio 0.
+  * Criação do arquivo `gdt_flush.s` em Assembly, responsável por executar `lgdt` e recarregar os registradores de segmento (`ds`, `ss`, `es`, `fs`, `gs` via `mov`, e `cs` via *far jump*, já que não existe instrução direta para isso).
+  * Chamada de `gdt.gdtInstall()` logo no início de `kmain()`, antes de qualquer outra inicialização.
