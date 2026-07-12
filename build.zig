@@ -29,9 +29,7 @@ pub fn build(b: *std.Build) void {
     // CORREÇÃO PARA A 0.16.0: O objeto entra no root_module do kernel, não no kernel direto!
     kernel.root_module.addObjectFile(loader_o);
     // Capítulo 5: monta o gdt_flush.s da mesma forma que o loader.s
-    const nasm_gdt = b.addSystemCommand(&.{ "nasm", "-f", "elf32", "gdt_flush.s", "-o" });
-    const gdt_flush_o = nasm_gdt.addOutputFileArg("gdt_flush.o");
-    kernel.root_module.addObjectFile(gdt_flush_o);
+
     // Garante que o kernel seja gerado na pasta padrão zig-out/bin/
     b.installArtifact(kernel);
     // 5. Cria o passo customizado 'zig build iso'

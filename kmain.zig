@@ -1,21 +1,31 @@
 const fb = @import("utils/framebuffer.zig");
+
 const sp = @import("utils/serial_port.zig");
+
 const gdt = @import("utils/gdt.zig");
-export fn kmain() callconv(.c) void {
+
+const mb = @import("utils/multiboot.zig");
+export fn kmain(ebx: usize) callconv(.c) void {
     gdt.gdtInstall();
-    // Código de teste rápido da seção 4.2.2: escreve o caractere 'A' (0x41)
-    // com fundo preto e frente verde (0x02) no endereço físico 0xB8000
-    // const vga_mem: [*]volatile u16 = @ptrFromInt(0xB8000);
-    //vga_mem[0] = (0x02 << 8) | @as(u16, 0x41);
-    const msgfb = "Ola, Mundo! Usando o framebuffer.";
-    const msgsp = "Ola, Mundo! Usando a serial port.";
-    // 2. A função write espera um ponteiro bruto ([*]const u8).
-    // O Zig faz a coerção automática de um ponteiro de array (*const [X]u8)
-    // para um ponteiro bruto ([*]const u8) tranquilamente.
-    // Passamos também o tamanho usando a propriedade '.len' da string.
+
+    const mbinfo: *const mb.MultibootInfo = @ptrFromInt(ebx);
+
+    // 1. Verificamos se há exatamente 1 módulo carregado pelo GRUB
+    if (mbinfo.mods_count == 1) {
+        const addr_of_module = mbinfo.mods_addr;
+
+        // 2. Definimos o tipo e o chamamos
+        const CallModule = *const fn () callconv(.c) void;
+        const start_program: CallModule = @ptrFromInt(addr_of_module);
+
+        // 3. Executamos o programa
+        start_program();
+    }
+
+    // O código abaixo só será executado se o módulo retornar (o que geralmente não acontece)
+    const msgfb = "Modulo encerrado ou nao encontrado.";
     _ = fb.write(msgfb, msgfb.len);
-    _ = sp.write(msgsp, msgsp.len);
-    // 3. Trava a CPU em um loop infinito para o kernel não dar crash após terminar
+
     while (true) {
         asm volatile ("hlt");
     }
