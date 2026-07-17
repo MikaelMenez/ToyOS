@@ -1,7 +1,8 @@
-#ifndef INCLUDE_PIC_H
-#define INCLUDE_PIC_H
+#ifndef _PIC_H
+#define _PIC_H
+#include "stdint.h"
 
+// Gerenciamento do controlador de interrupções
 void pic_remap();
-void pic_acknowledge(unsigned int interrupt);
-
+void pic_acknowledge(uint32_t interrupt);
 #endif

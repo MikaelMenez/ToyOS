@@ -1,8 +1,8 @@
-#ifndef INCLUDE_FB_H
-#define INCLUDE_FB_H
+#ifndef _FB_H
+#define _FB_H
+#include "stdint.h"
 
-void fb_write_cell(unsigned int i, char c, unsigned char fg, unsigned char bg);
-void fb_move_cursor(unsigned short pos);
+// Funções para manipular a saída de vídeo (Framebuffer)
+void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg);
 void fb_clear();
-
 #endif

@@ -54,7 +54,7 @@ io.o: $(DRIVERS)/io.s
 	$(AS) $(ASFLAGS) $< -o $@
 
 run: kernel.elf
-	qemu-system-i386 -kernel kernel.elf
+	qemu-system-i386 -kernel kernel.elf -serial file:serial.log
 
 clean:
 	rm -rf *.o kernel.elf serial.log

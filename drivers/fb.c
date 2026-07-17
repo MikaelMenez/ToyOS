@@ -1,18 +1,16 @@
-#include "stdint.h"
+#include "fb.h"
 #include "io.h"
 
-// O endereço de memória onde a placa de vídeo mapeia o texto na tela
+// Endereço de memória de vídeo VGA
 char *fb = (char *) 0x000B8000;
 
 void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg) {
-    // Escreve o caractere na memória de vídeo
-    fb[i * 2] = c;
-    // Define a cor do caractere e do fundo (bitmask)
-    fb[i * 2 + 1] = ((fg & 0x0F) << 4) | (bg & 0x0F);
+    fb[i * 2] = c;                                // Escreve o caractere
+    fb[i * 2 + 1] = ((fg & 0x0F) << 4) | (bg & 0x0F); // Define cores
 }
 
 void fb_clear() {
-    // Simplesmente preenchemos toda a tela com espaços vazios
+    // Preenche a tela com espaços para limpar
     for (uint32_t i = 0; i < 80 * 25; i++) {
         fb_write_cell(i, ' ', 0, 0);
     }

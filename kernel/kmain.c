@@ -1,16 +1,14 @@
 #include "fb.h"
 #include "idt.h"
 #include "pic.h"
+#include "serial.h" 
 
 void kmain() {
-    fb_clear(); // Limpa a tela para começar do zero
+    fb_clear();
+    serial_init();  
+    pic_remap();
+    idt_install();
     
-    pic_remap();    // Configura o PIC
-    idt_install();  // Instala nossa tabela de interrupções
-    
-    asm volatile("sti"); // Abre a porta para as interrupções de hardware
-    
-    while(1) { 
-        
-    }
+    asm volatile("sti");
+    while(1) { }
 }

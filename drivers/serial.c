@@ -1,28 +1,21 @@
-#include "io.h"
+#include "serial.h"
+#include "io.h"  
 
-#define SERIAL_COM1_BASE 0x3F8
-#define SERIAL_DATA_PORT(base) (base)
-#define SERIAL_LINE_COMMAND_PORT(base) (base + 3)
-#define SERIAL_LINE_STATUS_PORT(base) (base + 5)
-#define SERIAL_LINE_ENABLE_DLAB 0x80
+#define COM1 0x3F8
 
-void serial_configure_baud_rate(unsigned short com, unsigned short divisor) {
-    outb(SERIAL_LINE_COMMAND_PORT(com), SERIAL_LINE_ENABLE_DLAB);
-    outb(SERIAL_DATA_PORT(com), (divisor >> 8) & 0x00FF);
-    outb(SERIAL_DATA_PORT(com), divisor & 0x00FF);
+void serial_init() {
+    outb(COM1 + 1, 0x00); // Desativa interrupções
+    outb(COM1 + 3, 0x80); // Habilita configuração de DLAB
+    outb(COM1 + 0, 0x03); // Define divisor de velocidade (baixa velocidade)
+    outb(COM1 + 1, 0x00);
+    outb(COM1 + 3, 0x03); // 8 bits, sem paridade, 1 stop bit
+    outb(COM1 + 2, 0xC7); // Habilita FIFO, limpa buffers
+    outb(COM1 + 4, 0x0B); // IRQs ativadas, RTS/DSR definido
 }
 
-void serial_configure_line(unsigned short com) {
-    outb(SERIAL_LINE_COMMAND_PORT(com), 0x03);
-}
-
-int serial_is_transmit_fifo_empty(unsigned int com) {
-    return inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20;
-}
-
-void serial_write(unsigned int com, char *buf, unsigned int len) {
-    for (unsigned int i = 0; i < len; i++) {
-        while (serial_is_transmit_fifo_empty(com) == 0);
-        outb(SERIAL_DATA_PORT(com), buf[i]);
-    }
+// Envia um byte pela porta serial
+void serial_write_byte(char c) {
+    // Espera o hardware estar pronto (bit 5 do registro de status)
+    while ((inb(COM1 + 5) & 0x20) == 0);
+    outb(COM1, c);
 }

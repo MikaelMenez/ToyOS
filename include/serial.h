@@ -2,9 +2,9 @@
 #define _SERIAL_H
 
 #include "stdint.h"
+#include "io.h"
 
-//funções para inicializar e escrever na porta serial
 void serial_init();
-void serial_write(char *str);
+void serial_write_byte(char c);
 
 #endif
