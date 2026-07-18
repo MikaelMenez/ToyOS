@@ -1,60 +1,39 @@
-# Pastas
-INCLUDE = include
-DRIVERS = drivers
-KERNEL = kernel
-
-# Arquivos fonte
-SOURCES = $(DRIVERS)/fb.c $(DRIVERS)/pic.c $(DRIVERS)/serial.c \
-          $(KERNEL)/kmain.c $(KERNEL)/idt.c $(KERNEL)/gdt.c
-
-# Objetos
-OBJECTS = loader.o kmain.o fb.o pic.o serial.o gdt.o gdt_s.o idt.o interrupts.o io.o
+OBJECTS = kernel/loader.o kernel/kmain.o kernel/gdt.o kernel/gdt_s.o kernel/idt.o kernel/interrupts.o drivers/io.o drivers/fb.o drivers/serial.o drivers/pic.o
 
 CC = gcc
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
-         -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I$(INCLUDE)
+CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include
 LDFLAGS = -T link.ld -melf_i386
 AS = nasm
 ASFLAGS = -f elf
 
-all: kernel.elf
+all: os.iso
+
+# Regra para criar a pasta e compilar o módulo program
+iso/modules/program: program.s
+	mkdir -p iso/modules
+	$(AS) -f bin program.s -o iso/modules/program
+
+# Regras de compilação do Kernel
+kernel/%.o: kernel/%.c
+	$(CC) $(CFLAGS) $< -o $@
+
+drivers/%.o: drivers/%.c
+	$(CC) $(CFLAGS) $< -o $@
+
+kernel/%.o: kernel/%.s
+	$(AS) $(ASFLAGS) $< -o $@
 
 kernel.elf: $(OBJECTS)
 	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
 
-# Regras de compilação
-loader.o: $(KERNEL)/loader.s
-	$(AS) $(ASFLAGS) $< -o $@
+# A ISO depende do kernel e do módulo estarem prontos
+os.iso: kernel.elf iso/modules/program
+	cp kernel.elf iso/boot/kernel.elf
+	genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso
 
-kmain.o: $(KERNEL)/kmain.c
-	$(CC) $(CFLAGS) $< -o $@
-
-fb.o: $(DRIVERS)/fb.c
-	$(CC) $(CFLAGS) $< -o $@
-
-pic.o: $(DRIVERS)/pic.c
-	$(CC) $(CFLAGS) $< -o $@
-
-serial.o: $(DRIVERS)/serial.c
-	$(CC) $(CFLAGS) $< -o $@
-
-idt.o: $(KERNEL)/idt.c
-	$(CC) $(CFLAGS) $< -o $@
-
-gdt.o: $(KERNEL)/gdt.c
-	$(CC) $(CFLAGS) $< -o $@
-
-gdt_s.o: $(KERNEL)/gdt.s
-	$(AS) $(ASFLAGS) $< -o $@
-
-interrupts.o: $(KERNEL)/interrupts.s
-	$(AS) $(ASFLAGS) $< -o $@
-
-io.o: $(DRIVERS)/io.s
-	$(AS) $(ASFLAGS) $< -o $@
-
-run: kernel.elf
-	qemu-system-i386 -kernel kernel.elf -serial file:serial.log
+run: os.iso
+	qemu-system-i386 -cdrom os.iso -serial file:serial.log -monitor stdio
 
 clean:
-	rm -rf *.o kernel.elf serial.log
+	rm -f kernel/*.o drivers/*.o kernel.elf os.iso serial.log
+	rm -rf iso/modules

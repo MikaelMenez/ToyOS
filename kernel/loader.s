@@ -2,9 +2,10 @@ global loader
 extern kmain
 extern gdt_install
 
-MAGIC_NUMBER equ 0x1BADB002
-FLAGS        equ 0x0
-CHECKSUM     equ -(MAGIC_NUMBER + FLAGS)
+MAGIC_NUMBER    equ 0x1BADB002
+ALIGN_MODULES   equ 0x00000001
+FLAGS           equ ALIGN_MODULES
+CHECKSUM        equ -(MAGIC_NUMBER + FLAGS)
 
 section .text
 align 4
@@ -13,9 +14,13 @@ align 4
     dd CHECKSUM
 
 loader:
-    mov esp, kernel_stack + 4096 ; Define a pilha
-    call gdt_install             ; Inicializa a GDT antes do C
-    call kmain                   ; Chama o seu código C
+    mov esp, kernel_stack + 4096
+    
+    ; Passa o ponteiro da estrutura Multiboot (ebx) para o kmain
+    push ebx            
+    
+    call gdt_install
+    call kmain
 
 .loop:
     jmp .loop
