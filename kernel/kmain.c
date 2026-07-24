@@ -46,15 +46,13 @@ void kmain(uint32_t ebx) {
     fb_clear();
     pic_remap();
     idt_install();
-  
+    
     asm volatile("sti");
 
-    write_serial_str("Kernel inicializado...\n");
+    write_serial_str("Kernel inicializado na Metade Superior...\n");
 
-    // 2. EXIBE A MENSAGEM NO FRAMEBUFFER
     char *msg = "Bem vindo ao ToyOS";
     for (uint32_t i = 0; msg[i] != '\0'; i++) {
-        
         fb_write_cell(i, msg[i], 0x0A, 0x00); 
     }
 
@@ -63,13 +61,14 @@ void kmain(uint32_t ebx) {
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
         write_serial_str("Modulo carregado e em execucao...\n");
         
-        multiboot_module_t *modules = (multiboot_module_t *) mbinfo->mods_addr;
-        uint32_t module_start = modules[0].mod_start;
+        // CORREÇÃO DA PAGINAÇÃO: O GRUB salva os endereços físicos na struct. 
+        // Somamos 0xC0000000 para acessar os arrays e módulos do espaço virtual.
+        multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
+        uint32_t module_start = modules[0].mod_start + 0xC0000000;
         
         void (*start_program)(void) = (void (*)(void)) module_start;
         start_program(); // Salta para o loop infinito do program.s
     }
 
-    // Se o programa falhar ou não existir, a CPU fica dormindo aqui
     while(1) { asm volatile("hlt"); } 
 }

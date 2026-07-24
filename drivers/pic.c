@@ -12,7 +12,7 @@ void pic_remap() {
 }
 
 void pic_acknowledge(uint32_t interrupt) {
-    // Se veio do PIC escravo (IRQs 8-15)
+    
     if (interrupt >= 0x28) outb(0xA0, 0x20);
     
     // Sempre avisa o mestre

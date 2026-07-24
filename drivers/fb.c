@@ -2,8 +2,8 @@
 #include "fb.h"
 #include "io.h"
 
-// Usando uint8_t para ponteiro de memória crua garante matemática de ponteiro exata
-uint8_t *fb = (uint8_t *) 0x000B8000;
+
+uint8_t *fb = (uint8_t *) 0xC00B8000;
 
 void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg) {
     uint32_t offset = i * 2; 
@@ -12,7 +12,6 @@ void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg) {
 }
 
 void fb_clear() {
-    // Roda a tela toda preenchendo com vazios
     for (uint32_t i = 0; i < 80 * 25; i++) {
         fb_write_cell(i, ' ', 0, 0);
     }
