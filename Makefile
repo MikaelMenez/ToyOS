@@ -11,6 +11,7 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/pic.o \
           $(OBJDIR)/pmm.o \
           $(OBJDIR)/usermode.o
+		  $(OBJDIR)/enter_usermode.o
 
 CC = gcc
 CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include
