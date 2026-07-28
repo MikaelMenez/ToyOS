@@ -63,3 +63,7 @@ page_directory:
     resb 4096 
 kernel_stack:
     resb 4096
+
+global loader
+global page_directory    ;  nova linha - é necessário acessar isso
+extern kmain
