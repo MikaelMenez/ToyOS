@@ -43,5 +43,10 @@ void gdt_install() {
     // 2: Data Segment (0x92 = Read/Write, 0xCF = 4KB gran, 32-bit)
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
 
+    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
+
+    // Entrada 4: Dados do usuário (Ring 3)
+    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+
     load_gdt((uint32_t)&gp);
 }
