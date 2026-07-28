@@ -4,6 +4,7 @@
 #include "pic.h"
 #include "serial.h"
 #include "pmm.h"
+#include "usermode.h"
 
 typedef struct {
     uint32_t flags;
@@ -77,16 +78,20 @@ void kmain(uint32_t ebx, uint32_t kernel_v_start, uint32_t kernel_v_end, uint32_
     write_serial_str("Kernel inicializado na Metade Superior...\n");
 
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
-        write_serial_str("Modulo carregado e pronto para execucao...\n");
+        write_serial_str("Modulo encontrado. Configurando Ring 3...\n");
+        
         multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
-        uint32_t module_start = modules[0].mod_start + 0xC0000000;
         
-        void (*start_program)(void) = (void (*)(void)) module_start;
+        /* 1. Prepara a memória física e o novo Page Directory para o usuário */
+        uint32_t user_pdt_phys = usermode_setup(modules[0].mod_start, modules[0].mod_end);
         
-        write_serial_str("Saltando para o codigo do modulo externo...\n");
-        start_program(); 
+        write_serial_str("Saltando para o modo usuario (PL3) via IRET...\n");
         
-        write_serial_str("Modulo executado e retornou com sucesso!\n");
+        /* 2. Chama a função em Assembly que fará a transição */
+        enter_usermode(user_pdt_phys); 
+        
+        /* O código NUNCA deve chegar aqui. Se chegar, deu problema! */
+        write_serial_str("ERRO GRAVE: O programa retornou ao kernel!\n");
     }
 
     write_serial_str("Kernel travado estavelmente em loop infinito.\n");
