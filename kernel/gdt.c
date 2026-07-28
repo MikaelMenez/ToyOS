@@ -14,12 +14,10 @@ struct gdt_ptr {
     uint32_t base;
 } __attribute__((packed));
 
-struct gdt_entry gdt[3];
+struct gdt_entry gdt[5];
 struct gdt_ptr gp;
 
-
 extern void load_gdt(uint32_t gdt_ptr);
-
 
 void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran) {
     gdt[num].base_low    = (base & 0xFFFF);
@@ -31,21 +29,22 @@ void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, uint8_t access, u
 }
 
 void gdt_install() {
-    gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+    gp.limit = (sizeof(struct gdt_entry) * 5) - 1;   // 5 entradas agora
     gp.base  = (uint32_t) &gdt;
 
     // 0: Descritor Nulo
     gdt_set_gate(0, 0, 0, 0, 0);
-    
+
     // 1: Code Segment (0x9A = Exec/Read, 0xCF = 4KB gran, 32-bit)
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
-    
+
     // 2: Data Segment (0x92 = Read/Write, 0xCF = 4KB gran, 32-bit)
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
 
+    // 3: User Code Segment (0xFA = Exec/Read, DPL=3)
     gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
 
-    // Entrada 4: Dados do usuário (Ring 3)
+    // 4: User Data Segment (0xF2 = Read/Write, DPL=3)
     gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
     load_gdt((uint32_t)&gp);

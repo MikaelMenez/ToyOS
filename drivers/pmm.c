@@ -2,7 +2,7 @@
 #include "pmm.h"
 #include "serial.h"
 
-#define PMM_MAX_SIZE 0x08000000 
+#define PMM_MAX_SIZE 0x08000000
 #define PAGE_SIZE 4096
 
 static uint32_t memory_limit = 0;
@@ -45,25 +45,28 @@ void pmm_init(uint32_t mmap_addr, uint32_t mmap_length, uint32_t mem_lower, uint
     if (memory_limit > PMM_MAX_SIZE) {
         memory_limit = PMM_MAX_SIZE;
     }
-
     uint32_t total_frames = memory_limit / PAGE_SIZE;
-    bitmap_size = total_frames / 32 / 8;
-    
-    memory_bitmap = (uint32_t *) (safe_end + 0xC0000000);
 
+    // CORRIGIDO: tamanho do bitmap em bytes = 1 bit por frame
+    bitmap_size = total_frames / 8;
+
+    memory_bitmap = (uint32_t *) (safe_end + 0xC0000000);
     for (uint32_t i = 0; i < bitmap_size / 4; i++) {
         memory_bitmap[i] = 0xFFFFFFFF;
     }
 
     multiboot_memory_map_t *mmap = (multiboot_memory_map_t *) (mmap_addr + 0xC0000000);
     uint32_t mmap_end = mmap_addr + mmap_length + 0xC0000000;
-
     while ((uint32_t) mmap < mmap_end) {
         if (mmap->type == 1 && mmap->base_addr_low >= 0x100000) {
             uint32_t start_frame = mmap->base_addr_low / PAGE_SIZE;
             uint32_t num_frames = mmap->length_low / PAGE_SIZE;
             for (uint32_t i = 0; i < num_frames; i++) {
-                bitmap_unset(start_frame + i);
+                uint32_t frame = start_frame + i;
+                // DEFENSIVO: nunca escreve fora do bitmap alocado
+                if (frame < total_frames) {
+                    bitmap_unset(frame);
+                }
             }
         }
         mmap = (multiboot_memory_map_t *) ((uint32_t) mmap + mmap->size + sizeof(mmap->size));

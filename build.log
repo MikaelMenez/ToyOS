@@ -1,0 +1,21 @@
+mkdir -p obj
+nasm -f elf kernel/loader.s -o obj/loader.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include kernel/kmain.c -o obj/kmain.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include kernel/gdt.c -o obj/gdt.o
+nasm -f elf kernel/gdt_s.s -o obj/gdt_s.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include kernel/idt.c -o obj/idt.o
+nasm -f elf kernel/interrupts.s -o obj/interrupts.o
+nasm -f elf drivers/io.s -o obj/io.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include drivers/fb.c -o obj/fb.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include drivers/serial.c -o obj/serial.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include drivers/pic.c -o obj/pic.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include drivers/pmm.c -o obj/pmm.o
+gcc -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include kernel/usermode.c -o obj/usermode.o
+nasm -f elf kernel/enter_usermode.s -o obj/enter_usermode.o
+gcc -m32 -ffreestanding -fno-pie -c user/program.c -o obj/program_c.o
+nasm -f elf32 user/start.s -o obj/start_s.o
+mkdir -p iso/modules
+ld -m elf_i386 -T user/link.ld -o iso/modules/program obj/program_c.o obj/start_s.o
+ld -T link.ld -melf_i386 obj/loader.o obj/kmain.o obj/gdt.o obj/gdt_s.o obj/idt.o obj/interrupts.o obj/io.o obj/fb.o obj/serial.o obj/pic.o obj/pmm.o obj/usermode.o obj/enter_usermode.o -o kernel.elf
+cp kernel.elf iso/boot/kernel.elf
+genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso

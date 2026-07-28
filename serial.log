@@ -1,14 +1,7 @@
 PMM Inicializado com sucesso!
 Kernel inicializado na Metade Superior...
-Modulo carregado e pronto para execucao...
-Saltando para o codigo do modulo externo...
-Modulo executado e retornou com sucesso!
-Kernel travado estavelmente em loop infinito.
-[KEY] d
-[KEY] a
-[KEY] s
-[KEY] d
-[KEY] a
-[KEY] d
-[KEY] a
-[KEY] d
+Modulo encontrado. Configurando Ring 3...
+Cap 11.2: preparando ambiente de modo usuario...
+Cap 11.2: binario do modulo copiado para 0x00400000
+Cap 11.2: page directory do usuario montado
+Saltando para o modo usuario (PL3) via IRET...
