@@ -3,6 +3,7 @@
 #include "idt.h"
 #include "pic.h"
 #include "serial.h"
+#include "pmm.h"
 
 typedef struct {
     uint32_t flags;
@@ -41,34 +42,55 @@ void write_serial_str(char *s) {
     }
 }
 
-void kmain(uint32_t ebx) {
+void kmain(uint32_t ebx, uint32_t kernel_v_start, uint32_t kernel_v_end, uint32_t kernel_p_start, uint32_t kernel_p_end) {
+    (void)kernel_v_start;
+    (void)kernel_v_end;
+    (void)kernel_p_start;
+    (void)kernel_p_end;
+
     serial_init();
     fb_clear();
     pic_remap();
     idt_install();
     
-    asm volatile("sti");
-
-    write_serial_str("Kernel inicializado na Metade Superior...\n");
-
-    char *msg = "Bem vindo ao ToyOS";
+    char *msg = "Bem vindo ao ToyOS - Cap 10";
     for (uint32_t i = 0; msg[i] != '\0'; i++) {
         fb_write_cell(i, msg[i], 0x0A, 0x00); 
     }
 
     multiboot_info_t *mbinfo = (multiboot_info_t *) ebx;
 
+    uint32_t safe_end = kernel_p_end;
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
-        write_serial_str("Modulo carregado e em execucao...\n");
-        
-        // CORREÇÃO DA PAGINAÇÃO: O GRUB salva os endereços físicos na struct. 
-        // Somamos 0xC0000000 para acessar os arrays e módulos do espaço virtual.
+        multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
+        if (modules[0].mod_end > safe_end) {
+            safe_end = modules[0].mod_end;
+        }
+    }
+
+    if ((mbinfo->flags & 0x40) != 0) {
+        pmm_init(mbinfo->mmap_addr, mbinfo->mmap_length, mbinfo->mem_lower, mbinfo->mem_upper, safe_end);
+        write_serial_str("PMM Inicializado com sucesso!\n");
+    }
+
+    asm volatile("sti");
+    write_serial_str("Kernel inicializado na Metade Superior...\n");
+
+    if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
+        write_serial_str("Modulo carregado e pronto para execucao...\n");
         multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
         uint32_t module_start = modules[0].mod_start + 0xC0000000;
         
         void (*start_program)(void) = (void (*)(void)) module_start;
-        start_program(); // Salta para o loop infinito do program.s
+        
+        write_serial_str("Saltando para o codigo do modulo externo...\n");
+        start_program(); 
+        
+        write_serial_str("Modulo executado e retornou com sucesso!\n");
     }
 
-    while(1) { asm volatile("hlt"); } 
+    write_serial_str("Kernel travado estavelmente em loop infinito.\n");
+    while(1) { 
+        asm volatile("hlt"); 
+    }
 }

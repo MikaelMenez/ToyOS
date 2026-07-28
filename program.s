@@ -1,8 +1,7 @@
 [bits 32]
 section .text
-global _start
+global start
 
-_start:
-    mov eax, 0xDEADBEEF
-.loop:
-    jmp .loop
+start:
+    ; O módulo agora não escreve mais nada na tela, apenas retorna o controle para o kernel
+    ret

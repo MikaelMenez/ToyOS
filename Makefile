@@ -1,5 +1,4 @@
 OBJDIR = obj
-
 OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/kmain.o \
           $(OBJDIR)/gdt.o \
@@ -9,7 +8,8 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/io.o \
           $(OBJDIR)/fb.o \
           $(OBJDIR)/serial.o \
-          $(OBJDIR)/pic.o
+          $(OBJDIR)/pic.o \
+          $(OBJDIR)/pmm.o
 
 CC = gcc
 CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include
