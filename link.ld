@@ -26,4 +26,5 @@ SECTIONS {
 
     kernel_virtual_end = .;
     kernel_physical_end = . - 0xC0000000;
+    kernel_p_end = .;
 }
