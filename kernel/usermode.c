@@ -1,6 +1,16 @@
 #include "usermode.h"
 #include "serial.h"
 
+/* write_serial_str e' privada do kmain.c (nao existe no serial.h),
+ * entao criamos aqui a mesma logica, usando serial_write_byte que
+ * essa sim e' publica no serial.h. */
+static void usermode_log(const char *s)
+{
+    while (*s) {
+        serial_write_byte(*s++);
+    }
+}
+
 /* Page directory do KERNEL, definido em loader.s (agora exportado com
  * "global page_directory"). Precisamos dele só para abrir uma janela
  * temporária de escrita na região física nova, já que o kernel hoje só
@@ -31,7 +41,7 @@ static uint32_t user_page_directory[1024] __attribute__((aligned(4096)));
 
 uint32_t usermode_setup(uint32_t module_start_phys, uint32_t module_end_phys)
 {
-    write_serial_str("Cap 11.2: preparando ambiente de modo usuario...\n");
+    usermode_log("Cap 11.2: preparando ambiente de modo usuario...\n");
 
     /* 1. Abre uma janela temporaria no page directory do KERNEL para
      *    conseguir ESCREVER na regiao fisica nova (0x00400000+), que
@@ -49,7 +59,7 @@ uint32_t usermode_setup(uint32_t module_start_phys, uint32_t module_end_phys)
         dst[i] = src[i];
     }
 
-    write_serial_str("Cap 11.2: binario do modulo copiado para 0x00400000\n");
+    usermode_log("Cap 11.2: binario do modulo copiado para 0x00400000\n");
 
     /* 3. Fecha a janela temporaria - nao precisamos mais dela. */
     page_directory[KERNEL_TEMP_WINDOW_PDE] = 0;
@@ -70,7 +80,7 @@ uint32_t usermode_setup(uint32_t module_start_phys, uint32_t module_end_phys)
     user_page_directory[0]   = USER_PHYS_BASE | PDE_USER_4MB;
     user_page_directory[768] = 0x00000000 | PDE_KERNEL_ONLY_4MB;
 
-    write_serial_str("Cap 11.2: page directory do usuario montado\n");
+    usermode_log("Cap 11.2: page directory do usuario montado\n");
 
     /* Retorna o endereco FISICO do page directory (cr3 precisa do
      * endereco fisico, nao virtual). */
