@@ -44,7 +44,7 @@ os.iso: kernel.elf iso/modules/program
 	genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso
 
 run: os.iso
-	qemu-system-i386 -cdrom os.iso -serial file:serial.log
+	qemu-system-i386 -cdrom os.iso -serial file:serial.log -monitor stdio
 
 clean:
 	rm -rf $(OBJDIR) kernel.elf os.iso serial.log iso/modules
