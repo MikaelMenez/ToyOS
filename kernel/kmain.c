@@ -43,11 +43,9 @@ void write_serial_str(char *s) {
     }
 }
 
-void kmain(uint32_t ebx, uint32_t kernel_v_start, uint32_t kernel_v_end, uint32_t kernel_p_start, uint32_t kernel_p_end) {
-    (void)kernel_v_start;
-    (void)kernel_v_end;
-    (void)kernel_p_start;
-    (void)kernel_p_end;
+void kmain(uint32_t ebx) {
+    // Pega o fim do kernel direto do Linker Script com segurança
+    extern uint32_t kernel_p_end;
 
     serial_init();
     fb_clear();
@@ -61,7 +59,7 @@ void kmain(uint32_t ebx, uint32_t kernel_v_start, uint32_t kernel_v_end, uint32_
 
     multiboot_info_t *mbinfo = (multiboot_info_t *) ebx;
 
-    uint32_t safe_end = kernel_p_end;
+    uint32_t safe_end = (uint32_t)&kernel_p_end;
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
         multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
         if (modules[0].mod_end > safe_end) {
