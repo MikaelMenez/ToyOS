@@ -52,3 +52,19 @@ run: os.iso
 
 clean:
 	rm -rf $(OBJDIR) kernel.elf os.iso serial.log iso/modules
+# --- Regras para o Programa de Usuário (Ring 3) ---
+
+USER_DIR = user
+USER_C = $(USER_DIR)/program.c
+USER_S = $(USER_DIR)/start.s
+USER_OBJ = $(OBJDIR)/program_c.o $(OBJDIR)/start_s.o
+USER_BIN = iso/modules/program
+
+$(OBJDIR)/program_c.o: $(USER_C)
+	gcc -m32 -ffreestanding -fno-pie -c $< -o $@
+
+$(OBJDIR)/start_s.o: $(USER_S)
+	nasm -f elf32 $< -o $@
+
+$(USER_BIN): $(USER_OBJ) $(USER_DIR)/link.ld
+	ld -m elf_i386 -T $(USER_DIR)/link.ld -o $@ $(USER_OBJ)
