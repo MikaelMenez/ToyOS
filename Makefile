@@ -9,7 +9,8 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/fb.o \
           $(OBJDIR)/serial.o \
           $(OBJDIR)/pic.o \
-          $(OBJDIR)/pmm.o
+          $(OBJDIR)/pmm.o \
+          $(OBJDIR)/usermode.o
 
 CC = gcc
 CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include
