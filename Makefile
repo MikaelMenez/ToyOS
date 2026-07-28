@@ -10,7 +10,7 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/serial.o \
           $(OBJDIR)/pic.o \
           $(OBJDIR)/pmm.o \
-          $(OBJDIR)/usermode.o
+          $(OBJDIR)/usermode.o \
 		  $(OBJDIR)/enter_usermode.o
 
 CC = gcc
