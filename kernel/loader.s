@@ -15,7 +15,7 @@ align 4
 
 loader:
     
-    ; O diretório de páginas foi linkado em 0xC0100000, mas a paginação ainda está desligada!
+    ; O diretório de páginas foi linkado em 0xC0100000
     ; Precisamos do endereço físico real para a CPU, então subtraímos 0xC0000000.
     mov ecx, (page_directory - 0xC0000000)
 
