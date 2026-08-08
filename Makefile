@@ -11,7 +11,11 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/pic.o \
           $(OBJDIR)/pmm.o \
           $(OBJDIR)/usermode.o \
-          $(OBJDIR)/enter_usermode.o
+          $(OBJDIR)/enter_usermode.o \
+          $(OBJDIR)/vfs.o \
+          $(OBJDIR)/tarfs.o \
+          $(OBJDIR)/ramfs.o \
+          $(OBJDIR)/string.o
 
 CC = gcc
 CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -I include
@@ -39,7 +43,15 @@ $(OBJDIR)/%.o: drivers/%.s | $(OBJDIR)
 kernel.elf: $(OBJECTS)
 	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
 
-os.iso: kernel.elf iso/modules/program
+# --- Regra automática para criar o TARFS com múltiplos arquivos e o programa ---
+iso/modules/initrd.tar: teste.txt teste2.txt $(USER_BIN)
+	mkdir -p iso/modules
+	cp iso/modules/program ./program
+	tar cf iso/modules/initrd.tar teste.txt teste2.txt program
+	rm program
+
+# --- Agora o os.iso depende também do initrd.tar ---
+os.iso: kernel.elf iso/modules/program iso/modules/initrd.tar
 	cp kernel.elf iso/boot/kernel.elf
 	genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso
 
