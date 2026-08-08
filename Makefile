@@ -1,3 +1,12 @@
+# ==========================================
+# Variáveis do Programa de Usuário (Ring 3)
+# ==========================================
+USER_DIR = user
+USER_C = $(USER_DIR)/shell.c
+USER_S = $(USER_DIR)/start.s
+USER_OBJ = $(OBJDIR)/program_c.o $(OBJDIR)/start_s.o
+USER_BIN = iso/modules/program
+
 OBJDIR = obj
 OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/kmain.o \
@@ -15,6 +24,8 @@ OBJECTS = $(OBJDIR)/loader.o \
           $(OBJDIR)/vfs.o \
           $(OBJDIR)/tarfs.o \
           $(OBJDIR)/ramfs.o \
+          $(OBJDIR)/syscall.o \
+          $(OBJDIR)/syscall_s.o \
           $(OBJDIR)/string.o
 
 CC = gcc
@@ -43,15 +54,12 @@ $(OBJDIR)/%.o: drivers/%.s | $(OBJDIR)
 kernel.elf: $(OBJECTS)
 	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
 
-# --- Regra automática para criar o TARFS com múltiplos arquivos e o programa ---
+# --- Regra limpa para criar o TARFS com múltiplos arquivos e o programa ---
 iso/modules/initrd.tar: teste.txt teste2.txt $(USER_BIN)
-	mkdir -p iso/modules
-	cp iso/modules/program ./program
-	tar cf iso/modules/initrd.tar teste.txt teste2.txt program
-	rm program
+	tar cf iso/modules/initrd.tar teste.txt teste2.txt -C iso/modules program
 
-# --- Agora o os.iso depende também do initrd.tar ---
-os.iso: kernel.elf iso/modules/program iso/modules/initrd.tar
+# --- O os.iso depende do kernel, do binário de usuário e do initrd.tar ---
+os.iso: kernel.elf $(USER_BIN) iso/modules/initrd.tar
 	cp kernel.elf iso/boot/kernel.elf
 	genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso
 
@@ -61,16 +69,10 @@ run: os.iso
 clean:
 	rm -rf $(OBJDIR) kernel.elf os.iso serial.log iso/modules
 
-# --- Regras para o Programa de Usuário (Ring 3) ---
-
-USER_DIR = user
-USER_C = $(USER_DIR)/program.c
-USER_S = $(USER_DIR)/start.s
-USER_OBJ = $(OBJDIR)/program_c.o $(OBJDIR)/start_s.o
-USER_BIN = iso/modules/program
+# --- Regras para compilar o Programa de Usuário (Ring 3) ---
 
 $(OBJDIR)/program_c.o: $(USER_C) | $(OBJDIR)
-	gcc -m32 -ffreestanding -fno-pie -c $< -o $@
+	gcc -m32 -ffreestanding -fno-pie -fno-stack-protector -I include -c $< -o $@
 
 $(OBJDIR)/start_s.o: $(USER_S) | $(OBJDIR)
 	nasm -f elf32 $< -o $@

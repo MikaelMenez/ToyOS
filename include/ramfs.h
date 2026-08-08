@@ -28,7 +28,11 @@ ramfs_node_t *ramfs_find_child(ramfs_node_t *parent_dir, const char *name);
 int ramfs_write(ramfs_node_t *file_node, const uint8_t *src, uint32_t size);
 uint32_t ramfs_read(ramfs_node_t *file_node, uint8_t *dest, uint32_t offset, uint32_t size);
 int ramfs_remove(ramfs_node_t *target_node);
+int ramfs_move(ramfs_node_t *target_node, ramfs_node_t *new_parent, const char *new_name);
 void ramfs_get_path(ramfs_node_t *node, char *buffer, uint32_t max_len);
 void ramfs_print_tree(ramfs_node_t *node, int indent);
+uint32_t ramfs_node_name(ramfs_node_t *node, char *buf, uint32_t max_len);
+ramfs_node_t *ramfs_first_child(ramfs_node_t *dir);
+ramfs_node_t *ramfs_next_sibling(ramfs_node_t *node);
 
 #endif

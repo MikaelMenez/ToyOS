@@ -47,25 +47,28 @@ void write_serial_str(char *s) {
 }
 
 void kmain(uint32_t ebx) {
-    extern uint32_t kernel_p_end;
+    extern uint32_t _kernel_p_end;
 
     serial_init();
     fb_clear();
     pic_remap();
     idt_install();
-    
+
     char *msg = "Bem vindo ao ToyOS - Cap 12 (VFS & RAMFS)";
     for (uint32_t i = 0; msg[i] != '\0'; i++) {
-        fb_write_cell(i, msg[i], 0x0A, 0x00); 
+        fb_write_cell(i, msg[i], 0x0A, 0x00);
     }
+    fb_set_cursor_pos(80); /* console de texto comeca na linha 1 */
 
     multiboot_info_t *mbinfo = (multiboot_info_t *) ebx;
 
-    uint32_t safe_end = (uint32_t)&kernel_p_end;
+    uint32_t safe_end = (uint32_t)&_kernel_p_end;
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
-        multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
-        if (modules[0].mod_end > safe_end) {
-            safe_end = modules[0].mod_end;
+        multiboot_module_t *mods = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
+        for (uint32_t m = 0; m < mbinfo->mods_count; m++) {
+            if (mods[m].mod_end > safe_end) {
+                safe_end = mods[m].mod_end;
+            }
         }
     }
 
@@ -79,13 +82,13 @@ void kmain(uint32_t ebx) {
 
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
         write_serial_str("Modulo encontrado. Lendo Initrd/TARFS...\n");
-        
+
         multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
         uint32_t initrd_virtual_addr = modules[0].mod_start + 0xC0000000;
-        
+
         // 1. Inicializa o Sistema de Arquivos TAR
         tarfs_init(initrd_virtual_addr);
-        
+
         // 2. Leitura do "teste.txt"
         fs_node_t *arquivo1 = tarfs_find_file("teste.txt");
         if (arquivo1 != 0) {
@@ -107,29 +110,19 @@ void kmain(uint32_t ebx) {
             write_serial_str(buffer2);
             write_serial_str("\n");
         }
-        
-        /* COMENTADO TEMPORARIAMENTE: 
-            Como o módulo 0 agora é o initrd.tar, se tentarmos pular para ele como Ring 3,
-            o sistema vai tentar executar texto plano e vai dar Crash/Page Fault!
-        */
-        /*
-        uint32_t user_pdt_phys = usermode_setup(modules[0].mod_start, modules[0].mod_end);
-        write_serial_str("Saltando para o modo usuario (PL3) via IRET...\n");
-        enter_usermode(user_pdt_phys); 
-        */
     }
 
     // 3. Testa a criação de diretórios e imprime a árvore visual na serial
     write_serial_str("\n=== ESTRUTURA DO RAMFS (/) ===\n");
     write_serial_str("/ (Raiz)\n");
-    
+
     ramfs_node_t *ramfs_root = ramfs_init_root();
-    
+
     // Criando estrutura de teste
     ramfs_node_t *dir_docs = ramfs_mkdir(ramfs_root, "documentos");
     ramfs_mkdir(ramfs_root, "bin");
     ramfs_mkdir(ramfs_root, "drivers");
-    
+
     if (dir_docs != 0) {
         ramfs_mkdir(dir_docs, "projetos");
         ramfs_node_t *file = ramfs_create_file(dir_docs, "nota.txt");
@@ -143,8 +136,23 @@ void kmain(uint32_t ebx) {
     ramfs_print_tree(ramfs_root, 1);
     write_serial_str("==============================\n\n");
 
+    // 4. Salto para o modo de usuário (Ring 3) usando o Módulo 2 (/modules/program)
+    if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 1) {
+        write_serial_str("Modulo de usuario encontrado. Configurando Ring 3...\n");
+
+        multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
+
+        uint32_t user_start = modules[1].mod_start;
+        uint32_t user_end = modules[1].mod_end;
+
+        uint32_t user_pdt_phys = usermode_setup(user_start, user_end);
+
+        write_serial_str("Saltando para o modo usuario (PL3) via IRET...\n");
+        enter_usermode(user_pdt_phys);
+    }
+
     write_serial_str("Kernel aguardando...\n");
-    while(1) { 
-        asm volatile("hlt"); 
+    while(1) {
+        asm volatile("hlt");
     }
 }

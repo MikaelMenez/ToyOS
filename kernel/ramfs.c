@@ -1,6 +1,5 @@
 #include "ramfs.h"
-
-extern void write_serial_str(char *s);
+#include "console.h"
 
 /* ============================================================================
  * ALOCADOR DE MEMÓRIA INTERNO DO RAMFS
@@ -36,6 +35,10 @@ static ramfs_node_t root_node;
  * @return Ponteiro para o nó raiz global (root_node).
  */
 ramfs_node_t *ramfs_init_root(void) {
+    /* Se a raiz já foi inicializada, não destrói a árvore existente */
+    if (root_node.name[0] == '/') {
+        return &root_node;
+    }
     for (int i = 0; i < 128; i++) {
         root_node.name[i] = 0;
     }
@@ -261,6 +264,83 @@ int ramfs_remove(ramfs_node_t *target_node) {
         }
     }
     return 0;
+}
+
+/**
+ * @brief Move um nó para outro diretório e/ou renomeia ele (comando 'mv').
+ * Reaproveita o nó já alocado, apenas relocando-o na árvore.
+ * @return 0 em caso de sucesso, -1 em caso de erro.
+ */
+int ramfs_move(ramfs_node_t *target_node, ramfs_node_t *new_parent, const char *new_name) {
+    if (!target_node || target_node == &root_node) return -1;
+    if (!new_parent || !(new_parent->flags & RAMFS_DIRECTORY)) return -1;
+
+    const char *name = (new_name && new_name[0] != '\0') ? new_name : target_node->name;
+
+    // Confere se já existe um filho com o (futuro) nome no destino
+    ramfs_node_t *existing = ramfs_find_child(new_parent, name);
+    if (existing != 0 && existing != target_node) return -1;
+
+    // Desconecta da lista do pai atual
+    ramfs_node_t *old_parent = target_node->parent;
+    if (old_parent != 0) {
+        if (old_parent->children == target_node) {
+            old_parent->children = target_node->next;
+        } else {
+            ramfs_node_t *curr = old_parent->children;
+            while (curr != 0 && curr->next != target_node) {
+                curr = curr->next;
+            }
+            if (curr != 0 && curr->next == target_node) {
+                curr->next = target_node->next;
+            }
+        }
+    }
+
+    target_node->next = 0;
+    target_node->parent = new_parent;
+
+    // Aplica o nome novo, se houver
+    if (name != target_node->name) {
+        int i = 0;
+        while (name[i] != '\0' && i < 127) {
+            target_node->name[i] = name[i];
+            i++;
+        }
+        target_node->name[i] = '\0';
+    }
+
+    // Insere no final da lista de filhos do destino
+    if (new_parent->children == 0) {
+        new_parent->children = target_node;
+    } else {
+        ramfs_node_t *curr = new_parent->children;
+        while (curr->next != 0) curr = curr->next;
+        curr->next = target_node;
+    }
+
+    return 0;
+}
+
+uint32_t ramfs_node_name(ramfs_node_t *node, char *buf, uint32_t max_len) {
+    if (!node || !buf || max_len == 0) return 0;
+    uint32_t i = 0;
+    while (node->name[i] != '\0' && i < max_len - 1) {
+        buf[i] = node->name[i];
+        i++;
+    }
+    buf[i] = '\0';
+    return i;
+}
+
+ramfs_node_t *ramfs_first_child(ramfs_node_t *dir) {
+    if (!dir || !(dir->flags & RAMFS_DIRECTORY)) return 0;
+    return dir->children;
+}
+
+ramfs_node_t *ramfs_next_sibling(ramfs_node_t *node) {
+    if (!node) return 0;
+    return node->next;
 }
 
 /**

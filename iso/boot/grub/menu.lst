@@ -1,6 +1,7 @@
 default=0
 timeout=0
 
-title ToyOS
-kernel /boot/kernel.elf
-module /modules/initrd.tar
+title os
+    kernel /boot/kernel.elf
+    module /modules/initrd.tar
+    module /modules/program
