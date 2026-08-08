@@ -1,15 +1,13 @@
-/* user/link.ld */
-OUTPUT_FORMAT("binary")   /* ADICIONAR ESTA LINHA */
+OUTPUT_FORMAT("binary")
 
 ENTRY(_start)
 SECTIONS
 {
-    /* O programa de usuário começa no endereço virtual 0 */
     . = 0x00000000;
 
     .text ALIGN(4) :
     {
-        obj/start_s.o(.text)   /* garante que _start (start.s) vem primeiro */
+        obj/start_s.o(.text)  /* _start precisa estar estritamente no topo */
         *(.text)
     }
     .data ALIGN(4) :
