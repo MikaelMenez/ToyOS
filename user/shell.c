@@ -181,8 +181,8 @@ static void cmd_ls(int argc, char **argv)
     while (n) {
         char name[128];
         sys_ramfs_name(n, name, 128);
-        if (sys_ramfs_mode(n) & F_DIR) sys_print("[d] ");
-        else                            sys_print("[f] ");
+        if (sys_ramfs_mode(n) & F_DIR) sys_print("[diretorio] ");
+        else                            sys_print("[arquivo] ");
         sys_print(name);
         sys_print("\n");
         n = sys_ramfs_sibling(n);
@@ -342,7 +342,7 @@ static void cmd_help(void)
     sys_print("  mv <orig> <dest>  move ou renomeia\n");
     sys_print("  write <caminho> <texto...>\n");
     sys_print("  read <caminho>    mostra conteudo (alias: cat)\n");
-    sys_print("  grep <padra> <caminho>\n");
+    sys_print("  grep <padrao> <caminho>\n");
     sys_print("  help\n");
 }
 
@@ -373,7 +373,7 @@ int main(void)
     g_root = sys_ramfs_init();
     g_cwd  = g_root;
 
-    sys_print("ToyOS Shell - Ring 3\n");
+    sys_print("Toysh\n");
 
     while (1) {
         print_prompt();

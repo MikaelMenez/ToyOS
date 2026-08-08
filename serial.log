@@ -20,46 +20,16 @@ Cap 11.2: preparando ambiente de modo usuario...
 Cap 11.2: binario do modulo copiado para 0x00400000
 Cap 11.2: page directory do usuario montado com espelho do kernel
 Saltando para o modo usuario (PL3) via IRET...
-ToyOS Shell - Ring 3
-/> a ol[a
-desconhecido: ol[a  (digite help)
-/> ola
-desconhecido: ola  (digite help)
-/> help
-Comandos:
-  pwd               diretorio atual
-  ls [caminho]      lista arquivos/pastas
-  cd <caminho>      navega (/, .., relativo)
-  tree              mostra a arvore completa
-  mkdir <caminho>   cria pasta
-  touch <caminho>   cria arquivo vazio
-  rm <caminho>      remove arquivo/pasta vazia
-  mv <orig> <dest>  move ou renomeia
-  write <caminho> <texto...>
-  read <caminho>    mostra conteudo (alias: cat)
-  grep <padra> <caminho>
-  help
-/> pwd
-/
+Toysh
 /> ls
-[d] documentos
-[d] bin
-[d] drivers
-/> cd drivers
-/drivers> pwd
-/drivers
-/drivers> cd ..
-/> touch nigga.txt
+[diretorio] documentos
+[diretorio] bin
+[diretorio] drivers
+/> touch gay
 touch: criado
 /> ls
-[d] documentos
-[d] bin
-[d] drivers
-[f] nigga.txt
-/> write nigga.txt ola
-write: gravado 3 bytes
-/> greo   p ola
-use: grep <padrao> <caminho>
-/> grep o nigga.txt
-ola
+[diretorio] documentos
+[diretorio] bin
+[diretorio] drivers
+[arquivo] gay
 /> 
