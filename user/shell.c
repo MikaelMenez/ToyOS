@@ -373,7 +373,7 @@ int main(void)
     g_root = sys_ramfs_init();
     g_cwd  = g_root;
 
-    sys_print("ToyOS Shell - Ring 3\n");
+    sys_print("toysh\n");
 
     while (1) {
         print_prompt();

@@ -54,7 +54,7 @@ void kmain(uint32_t ebx) {
     pic_remap();
     idt_install();
 
-    char *msg = "Bem vindo ao ToyOS - Cap 12 (VFS & RAMFS)";
+    char *msg = "Bem vindo ao ToyOS";
     for (uint32_t i = 0; msg[i] != '\0'; i++) {
         fb_write_cell(i, msg[i], 0x0A, 0x00);
     }

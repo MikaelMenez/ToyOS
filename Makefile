@@ -59,12 +59,15 @@ iso/modules/initrd.tar: teste.txt teste2.txt $(USER_BIN)
 	tar cf iso/modules/initrd.tar teste.txt teste2.txt -C iso/modules program
 
 # --- O os.iso depende do kernel, do binário de usuário e do initrd.tar ---
-os.iso: kernel.elf $(USER_BIN) iso/modules/initrd.tar
+os.iso: kernel.elf $(USER_BIN) iso/modules/initrd.tar iso/boot/grub/grub.cfg
 	cp kernel.elf iso/boot/kernel.elf
-	genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o os.iso iso
+	grub-mkrescue --locales= --themes= -o os.iso iso
 
 run: os.iso
 	qemu-system-i386 -cdrom os.iso -serial file:serial.log -monitor stdio
+
+run-uefi: os.iso
+	qemu-system-x86_64 -bios /usr/share/edk2/x64/OVMF.4m.fd -cdrom os.iso -serial file:serial.log -monitor stdio
 
 clean:
 	rm -rf $(OBJDIR) kernel.elf os.iso serial.log iso/modules
