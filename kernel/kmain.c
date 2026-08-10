@@ -1,3 +1,15 @@
+/* ============================================================================
+ * kmain.c — O "coração" do ToyOS
+ * ----------------------------------------------------------------------------
+ * É a primeira função em C que roda quando o sistema boota. Aqui a gente:
+ *
+ *   1. Liga o que é básico pra qualquer saída (serial e tela).
+ *   2. Inicializa interrupções e o gerenciador de memória.
+ *   3. Lê o initrd (TARFS) que o GRUB carregou junto.
+ *   4. Monta uma árvore de diretórios em memória (RAMFS) só de demonstração.
+ *   5. Prepara tudo e salta pro modo usuário (Ring 3).
+ * ============================================================================ */
+
 #include "stdint.h"
 #include "fb.h"
 #include "idt.h"
@@ -9,17 +21,19 @@
 #include "tarfs.h" // Cabeçalho do TARFS
 #include "ramfs.h" // Cabeçalho do RAMFS
 
+/* A estrutura que o GRUB preenche e passa pra gente (via ebx no loader.s).
+ * Guarda infos de memória, módulos carregados, mapa de memória etc. */
 typedef struct {
     uint32_t flags;
     uint32_t mem_lower;
     uint32_t mem_upper;
     uint32_t boot_device;
     uint32_t cmdline;
-    uint32_t mods_count;
-    uint32_t mods_addr;
+    uint32_t mods_count;  // quantos módulos o GRUB carregou
+    uint32_t mods_addr;   // onde está a lista de módulos
     uint32_t syms[4];
-    uint32_t mmap_length;
-    uint32_t mmap_addr;
+    uint32_t mmap_length; // tamanho do mapa de memória
+    uint32_t mmap_addr;   // endereço do mapa de memória
     uint32_t drives_length;
     uint32_t drives_addr;
     uint32_t config_table;
@@ -33,6 +47,8 @@ typedef struct {
     uint32_t vbe_interface_len;
 } __attribute__((packed)) multiboot_info_t;
 
+/* Descrição de um módulo específico carregado pelo GRUB
+ * (cada módulo tem onde começa, onde termina e uma "linha de comando"). */
 typedef struct {
     uint32_t mod_start;
     uint32_t mod_end;
@@ -40,6 +56,7 @@ typedef struct {
     uint32_t reserved;
 } __attribute__((packed)) multiboot_module_t;
 
+/* Atalho pra escrever uma string inteira na porta serial (log). */
 void write_serial_str(char *s) {
     while (*s) {
         serial_write_byte(*s++);
@@ -47,21 +64,31 @@ void write_serial_str(char *s) {
 }
 
 void kmain(uint32_t ebx) {
-    extern uint32_t _kernel_p_end;
+    extern uint32_t _kernel_p_end; // fim físico do kernel (definido no link.ld)
 
-    serial_init();
-    fb_clear();
-    pic_remap();
-    idt_install();
+    // ------------------------------------------------------------------------
+    // 1. Inicializa o mínimo possível pra já conseguir se comunicar com o mundo
+    // ------------------------------------------------------------------------
+    serial_init();   // porta COM1 — toda a nossa "impressão" de debug
+    fb_clear();      // limpa a tela
+    pic_remap();     // remapeia as IRQs pra fora das exceções da CPU
+    idt_install();   // tabela de interrupções (timer, teclado, syscall)
 
+    // Boas-vindas na tela, queimando direto no framebuffer VGA.
     char *msg = "Bem vindo ao ToyOS";
     for (uint32_t i = 0; msg[i] != '\0'; i++) {
-        fb_write_cell(i, msg[i], 0x0A, 0x00);
+        fb_write_cell(i, msg[i], 0x0A, 0x00); // verde brilhante sobre preto
     }
-    fb_set_cursor_pos(80); /* console de texto comeca na linha 1 */
+    fb_set_cursor_pos(80); /* console de texto começa na linha 1 */
 
+    // O GRUB nos entrega o endereço da struct multiboot em ebx.
     multiboot_info_t *mbinfo = (multiboot_info_t *) ebx;
 
+    // ------------------------------------------------------------------------
+    // 2. Descobre ramos de memória que não podem ser dados como livres:
+    //    o kernel em si e os módulos que o GRUB carregou (initrd.tare program).
+    //    A partir do maior endereço usado, o PMM sabe o que reservar.
+    // ------------------------------------------------------------------------
     uint32_t safe_end = (uint32_t)&_kernel_p_end;
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
         multiboot_module_t *mods = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
@@ -72,24 +99,30 @@ void kmain(uint32_t ebx) {
         }
     }
 
+    // Só inicializa o gerenciador de memória se o GRUB nos deu o mapa de memória.
     if ((mbinfo->flags & 0x40) != 0) {
         pmm_init(mbinfo->mmap_addr, mbinfo->mmap_length, mbinfo->mem_lower, mbinfo->mem_upper, safe_end);
         write_serial_str("PMM Inicializado com sucesso!\n");
     }
 
+    // Libera as interrupções — desde agora a CPU escuta o teclado e o timer.
     asm volatile("sti");
     write_serial_str("Kernel inicializado na Metade Superior...\n");
 
+    // ------------------------------------------------------------------------
+    // 3. Sistema de arquivos: lê o initrd.tar e converte num "disco" em memória
+    // ------------------------------------------------------------------------
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 0) {
         write_serial_str("Modulo encontrado. Lendo Initrd/TARFS...\n");
 
         multiboot_module_t *modules = (multiboot_module_t *) (mbinfo->mods_addr + 0xC0000000);
+        // O primeiro módulo (pela ordem do menu.lst) é o nosso initrd.tar.
         uint32_t initrd_virtual_addr = modules[0].mod_start + 0xC0000000;
 
         // 1. Inicializa o Sistema de Arquivos TAR
         tarfs_init(initrd_virtual_addr);
 
-        // 2. Leitura do "teste.txt"
+        // 2. Leitura do "teste.txt" — prova que o TARFS está funcionando
         fs_node_t *arquivo1 = tarfs_find_file("teste.txt");
         if (arquivo1 != 0) {
             char buffer1[256];
@@ -100,7 +133,8 @@ void kmain(uint32_t ebx) {
             write_serial_str("\n");
         }
 
-        // 2b. Leitura do "teste2.txt"
+        // 2b. Leitura do "teste2.txt" — mais um arquivo pra garantir que
+        //     a listagem do TAR anda direito entre um cabeçalho e outro.
         fs_node_t *arquivo2 = tarfs_find_file("teste2.txt");
         if (arquivo2 != 0) {
             char buffer2[256];
@@ -112,13 +146,16 @@ void kmain(uint32_t ebx) {
         }
     }
 
-    // 3. Testa a criação de diretórios e imprime a árvore visual na serial
+    // ------------------------------------------------------------------------
+    // 4. RAMFS: cria uma árvore de diretórios em memória só pra demonstrar
+    //    o sistema de arquivos "escrevível" e imprime ela no log serial.
+    // ------------------------------------------------------------------------
     write_serial_str("\n=== ESTRUTURA DO RAMFS (/) ===\n");
     write_serial_str("/ (Raiz)\n");
 
     ramfs_node_t *ramfs_root = ramfs_init_root();
 
-    // Criando estrutura de teste
+    // Criando estrutura de teste (igual um `/` de um Linux de mentira)
     ramfs_node_t *dir_docs = ramfs_mkdir(ramfs_root, "documentos");
     ramfs_mkdir(ramfs_root, "bin");
     ramfs_mkdir(ramfs_root, "drivers");
@@ -136,7 +173,10 @@ void kmain(uint32_t ebx) {
     ramfs_print_tree(ramfs_root, 1);
     write_serial_str("==============================\n\n");
 
-    // 4. Salto para o modo de usuário (Ring 3) usando o Módulo 2 (/modules/program)
+    // ------------------------------------------------------------------------
+    // 5. O grande final: salta pro modo usuário (Ring 3)!
+    //    O segundo módulo do GRUB (program) é o nosso programa de usuário.
+    // ------------------------------------------------------------------------
     if ((mbinfo->flags & 0x008) != 0 && mbinfo->mods_count > 1) {
         write_serial_str("Modulo de usuario encontrado. Configurando Ring 3...\n");
 
@@ -145,12 +185,15 @@ void kmain(uint32_t ebx) {
         uint32_t user_start = modules[1].mod_start;
         uint32_t user_end = modules[1].mod_end;
 
+        // Copia o binário pra memória dedicada e monta a tabela de páginas
+        // do usuário. Retorna o endereço físico do page directory (pro CR3).
         uint32_t user_pdt_phys = usermode_setup(user_start, user_end);
 
         write_serial_str("Saltando para o modo usuario (PL3) via IRET...\n");
-        enter_usermode(user_pdt_phys);
+        enter_usermode(user_pdt_phys); // esse retorno nunca acontece...
     }
 
+    // ...mas se o Ring 3 falhar e voltar por aqui, é só esperar quetinho.
     write_serial_str("Kernel aguardando...\n");
     while(1) {
         asm volatile("hlt");

@@ -1,18 +1,31 @@
+/* ============================================================================
+ * fb.c — Driver do framebuffer (tela VGA em modo texto)
+ * ----------------------------------------------------------------------------
+ * Esse é o capítulo 4 do livro (Output). O VGA tem uma "janela" de memória no
+ * endereço 0xB8000 onde cada posição de texto ocupa 2 bytes: o caractere em si
+ * e um byte de cor. Como rodamos na metade superior, o endereço vira
+ * 0xC00B8000. O cursor "piscante" do hardware também é controlado por portas
+ * (0x3D4/0x3D5). Tudo o que aparece na janela do QEMU passa por aqui.
+ * ============================================================================ */
+
 #include "stdint.h"
 #include "fb.h"
 #include "io.h"
 
-
+// Janela do texto VGA, na visão da memória superior (80 colunas × 25 linhas)
 uint8_t *fb = (uint8_t *) 0xC00B8000;
 
 static uint32_t fb_pos = 0; /* cursor do console de texto */
 
+/* Escreve um caractere numa posição específica da tela com cor fg/bg.
+ * O byte de cor é `bg << 4 | fg` (4 bits pra cada). */
 void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg) {
-    uint32_t offset = i * 2; 
+    uint32_t offset = i * 2;
     fb[offset] = c;
     fb[offset + 1] = ((bg & 0x0F) << 4) | (fg & 0x0F);
 }
 
+/* Limpa a tela toda com espaços e volta o cursor pro canto superior. */
 void fb_clear() {
     for (uint32_t i = 0; i < 80 * 25; i++) {
         fb_write_cell(i, ' ', 0, 0);
@@ -20,20 +33,21 @@ void fb_clear() {
     fb_pos = 0;
 }
 
+/* Move o cursor lógico (usado pelos programas) e o real (hardware). */
 void fb_set_cursor_pos(uint32_t cell) {
     fb_pos = cell;
     fb_hw_cursor((uint16_t)cell);
 }
 
-/* Move o cursor visivel/piscante do hardware VGA (portas 0x3D4/0x3D5) */
+/* Move o cursor visível/piscante do hardware VGA (portas 0x3D4/0x3D5) */
 void fb_hw_cursor(uint16_t pos) {
-    outb(0x3D4, 0x0E);
+    outb(0x3D4, 0x0E);            // seleciona registro "posição alta"
     outb(0x3D5, (pos >> 8) & 0xFF);
-    outb(0x3D4, 0x0F);
+    outb(0x3D4, 0x0F);            // seleciona registro "posição baixa"
     outb(0x3D5, pos & 0xFF);
 }
 
-/* Sobe uma linha e limpa a ultima (rolagem simples) */
+/* Sobe uma linha e limpa a última (rolagem simples) */
 static void fb_scroll(void) {
     for (uint32_t i = 0; i < 80 * 24; i++) {
         fb[i * 2]     = fb[(i + 80) * 2];
@@ -45,7 +59,9 @@ static void fb_scroll(void) {
     fb_pos = 80 * 24;
 }
 
-/* Escreve um caractere no console de texto do framebuffer */
+/* Escreve um caractere no console de texto do framebuffer, tratando
+ * caracteres especiais: \n pula de linha, \r vai pro começo da linha, \b apaga.
+ * Quando chega no fim da tela, faz a rolagem. */
 void fb_putc(char c) {
     if (c == '\n') {
         fb_pos = ((fb_pos / 80) + 1) * 80;
@@ -62,6 +78,7 @@ void fb_putc(char c) {
     fb_hw_cursor((uint16_t)(fb_pos >= 80 * 25 ? 80 * 25 - 1 : fb_pos));
 }
 
+/* Versão "string" do putc: vai jogando os caracteres na tela. */
 void fb_puts(const char *s) {
     while (*s) fb_putc(*s++);
 }

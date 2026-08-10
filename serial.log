@@ -21,15 +21,4 @@ Cap 11.2: binario do modulo copiado para 0x00400000
 Cap 11.2: page directory do usuario montado com espelho do kernel
 Saltando para o modo usuario (PL3) via IRET...
 Toysh
-/> ls
-[diretorio] documentos
-[diretorio] bin
-[diretorio] drivers
-/> touch gay
-touch: criado
-/> ls
-[diretorio] documentos
-[diretorio] bin
-[diretorio] drivers
-[arquivo] gay
 /> 

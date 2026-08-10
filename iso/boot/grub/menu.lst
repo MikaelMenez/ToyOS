@@ -1,7 +1,10 @@
+# Configuração do GRUB para o ToyOS.
+# O "module" na prática entrega um "disco" e o programa de usuário pro kernel:
+
 default=0
 timeout=0
 
 title os
-    kernel /boot/kernel.elf
-    module /modules/initrd.tar
-    module /modules/program
+    kernel /boot/kernel.elf      # o kernel (multiboot)
+    module /modules/initrd.tar   # módulo 1: arquivos de teste (TARFS)
+    module /modules/program      # módulo 2: programa de usuário (Ring 3)
