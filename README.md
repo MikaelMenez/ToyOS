@@ -213,3 +213,25 @@ ToyOS
   (genisoimage no Debian/Ubuntu).
 - A ISO final (`os.iso`) é o artefato que importa; pode ser movida/regravada à
   vontade, mas `make` a reconstrói sozinha se faltar.
+
+  ## Capítulos do livro e quem fez o quê
+
+Cada capítulo e funcionalidade do projeto foi implementado e compartilhado pela equipe da seguinte forma:
+
+| Capítulo / Recurso | Tema | O que foi parar no projeto | Responsáveis |
+|---|---|---|---|
+| 1 | Introdução | Setup do ambiente, ferramentas e ideia geral | Todos |
+| 2 | First Steps | Boot com GRUB, cabeçalho multiboot e ISO (`loader.s`, `menu.lst`) | João Paulo, Álvaro |
+| 3 | Getting to C | Pilha e chamada de C a partir do assembly (`loader.s` → `kmain`) | João Paulo |
+| 4 | Output | Framebuffer (VGA) e porta serial (`fb.c`, `serial.c`, `io.s`) | Mikael Menezes |
+| 5 | Segmentation | GDT — Descritores e carregamento (`gdt.c`, `gdt_s.s`) | João Paulo, Álvaro |
+| 6 | Interrupts and Input | IDT, PIC e leitura do teclado (`idt.c`, `interrupts.s`, `pic.c`) | João Paulo |
+| 7 | The Road to User Mode | Módulos do GRUB e como carregar um programa externo | Mikael Menezes |
+| 8 | Virtual Memory (introdução) | Motivação para memória virtual | Todos |
+| 9 | Paging | Kernel na metade superior (`loader.s`, `link.ld`) | Mikael Menezes |
+| 10 | Page Frame Allocation | Alocador de memória por frames (`pmm.c`) | Mikael Menezes |
+| 11 | User Mode | TSS, page directory do usuário, salto para Ring 3 (`usermode.c/h`, `enter_usermode.s`, `user/`) | Álvaro |
+| 12 | File Systems | VFS + TARFS (somente leitura) + RAMFS (`vfs.c`, `tarfs.c`, `ramfs.c`) | João Paulo |
+| 13 | System Calls | Gateway `int $0x80` e dispatcher (`syscall.c`, `syscall_s.s`, `syscall.h`) | Todos |
+| 14 / Userland | Shell (Toysh) | Desenvolvimento da interface CLI no espaço de usuário (`shell.c`) | Mikael Menezes |
+| Utilitários | Comando `grep` | Algoritmo de busca por padrão de texto em arquivos | Mikael Menezes, Álvaro |
