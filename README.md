@@ -1,4 +1,4 @@
-# ToyOS 🍕
+# ToyOS 
 
 Um sistema operacional **de verdade** (mas pequeno, feito a mão) escrito do zero
 em C e Assembly x86, trilhando capítulo por capítulo o livro
@@ -54,7 +54,7 @@ Cada capítulo do livro foi implementado por alguém da equipe. Preencha a colun
 | 11 | User Mode | TSS, page directory do usuário, salto para Ring 3 (`usermode.c/h`, `enter_usermode.s`, `user/`) | _preencher_ |
 | 12 | File Systems | VFS + TARFS (somente leitura) + RAMFS (`vfs.c`, `tarfs.c`, `ramfs.c`) | _preencher_ |
 | 13 | System Calls | Gateway `int $0x80` e dispatcher (`syscall.c`, `syscall_s.s`, `syscall.h`) | _preencher_ |
-| 14 | Multitasking | Não implementado (fica como desafio futuro 😉) | _preencher_ |
+| 14 | Shell | shell.c | _preencher_ |
 
 ## Dependências
 
@@ -137,7 +137,7 @@ ToyOS/os.iso
 
 Ela é uma ISO bootável (formato El Torito) gerada pelo `genisoimage` a partir
 da pasta `iso/`. Você pode bootá-la no QEMU (`make run`), em outra VM, ou até
-escrevê-la num pendrive/CD e tentar em hardware real (com os devidos riscos 😄).
+escrevê-la num pendrive/CD e tentar em hardware real.
 
 ## Usando o shell (Toysh)
 
@@ -213,5 +213,3 @@ ToyOS
   (genisoimage no Debian/Ubuntu).
 - A ISO final (`os.iso`) é o artefato que importa; pode ser movida/regravada à
   vontade, mas `make` a reconstrói sozinha se faltar.
-
-Bom hackeio! 🚀
