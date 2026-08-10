@@ -228,10 +228,10 @@ Cada capítulo e funcionalidade do projeto foi implementado e compartilhado pela
 | 6 | Interrupts and Input | IDT, PIC e leitura do teclado (`idt.c`, `interrupts.s`, `pic.c`) | João Paulo |
 | 7 | The Road to User Mode | Módulos do GRUB e como carregar um programa externo | Mikael Menezes |
 | 8 | Virtual Memory (introdução) | Motivação para memória virtual | Todos |
-| 9 | Paging | Kernel na metade superior (`loader.s`, `link.ld`) | Mikael Menezes |
+| 9 | Paging | Kernel na metade superior (`loader.s`, `link.ld`) | João Paulo |
 | 10 | Page Frame Allocation | Alocador de memória por frames (`pmm.c`) | Mikael Menezes |
-| 11 | User Mode | TSS, page directory do usuário, salto para Ring 3 (`usermode.c/h`, `enter_usermode.s`, `user/`) | Álvaro |
+| 11 | User Mode | TSS, page directory do usuário, salto para Ring 3 (`usermode.c/h`, `enter_usermode.s`, `user/`) | Mikael Menezes, Álvaro |
 | 12 | File Systems | VFS + TARFS (somente leitura) + RAMFS (`vfs.c`, `tarfs.c`, `ramfs.c`) | João Paulo |
-| 13 | System Calls | Gateway `int $0x80` e dispatcher (`syscall.c`, `syscall_s.s`, `syscall.h`) | Todos |
+| 13 | System Calls | Gateway `int $0x80` e dispatcher (`syscall.c`, `syscall_s.s`, `syscall.h`) | Mikael Menezes |
 | 14 / Userland | Shell (Toysh) | Desenvolvimento da interface CLI no espaço de usuário (`shell.c`) | Mikael Menezes |
 | Utilitários | Comando `grep` | Algoritmo de busca por padrão de texto em arquivos | Mikael Menezes, Álvaro |
