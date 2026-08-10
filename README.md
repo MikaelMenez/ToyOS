@@ -218,7 +218,7 @@ ToyOS
 
 Mapeamento das responsabilidades e capítulos do livro implementados por cada integrante:
 
-| Capítulo / Recurso | Tema | O que foi parar no projeto | Contribuidores |
+| Capítulo / Recurso | Tema | O que foi feito no capítulo | Contribuintes |
 |---|---|---|---|
 | 1 | Introdução | Setup do ambiente, ferramentas e ideia geral | Todos |
 | 2 | First Steps | Boot com GRUB, cabeçalho multiboot e ISO (`loader.s`, `menu.lst`) | João Paulo, Álvaro |
