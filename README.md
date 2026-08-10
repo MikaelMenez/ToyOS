@@ -214,11 +214,11 @@ ToyOS
 - A ISO final (`os.iso`) é o artefato que importa; pode ser movida/regravada à
   vontade, mas `make` a reconstrói sozinha se faltar.
 
-  ## Capítulos do livro e quem fez o quê
+## Contribuições da Equipe
 
-Cada capítulo e funcionalidade do projeto foi implementado e compartilhado pela equipe da seguinte forma:
+Mapeamento das responsabilidades e capítulos do livro implementados por cada integrante:
 
-| Capítulo / Recurso | Tema | O que foi parar no projeto | Responsáveis |
+| Capítulo / Recurso | Tema | O que foi parar no projeto | Contribuidores |
 |---|---|---|---|
 | 1 | Introdução | Setup do ambiente, ferramentas e ideia geral | Todos |
 | 2 | First Steps | Boot com GRUB, cabeçalho multiboot e ISO (`loader.s`, `menu.lst`) | João Paulo, Álvaro |
